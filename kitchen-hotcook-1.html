@@ -1,0 +1,626 @@
+<div id="app"><div class="boot">読み込み中…</div></div>
+
+<style>
+  #app, #app * { box-sizing: border-box; }
+  #app {
+    --bg:#e8edeb; --card:#fff; --ink:#12211d; --ink2:#47574f; --mute:#7d8d86;
+    --line:#d3ddd9; --primary:#1b6b57; --soft:#dff0e9; --urgent:#b3431f;
+    --urgent-soft:#fae3d8; --warn:#b8862b; --warn-soft:#f8eed6;
+    --font:"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",system-ui,sans-serif;
+    font-family:var(--font); color:var(--ink); background:var(--bg);
+    max-width:460px; margin:0 auto; padding-bottom:78px; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  #app .boot { padding:40px 16px; color:var(--mute); text-align:center; }
+  #app header { padding:14px 16px 12px; background:var(--primary); color:#eaf5f0; }
+  #app .hd-top { display:flex; align-items:baseline; justify-content:space-between; gap:8px; }
+  #app .hd-title { font-size:16px; font-weight:700; }
+  #app .hd-date { font-size:12px; opacity:.8; }
+  #app .hd-alert { margin-top:10px; background:rgba(255,255,255,.13); border-radius:8px;
+    padding:9px 11px; font-size:13px; display:flex; gap:8px; align-items:flex-start; }
+  #app main { padding:14px 12px 8px; }
+  #app section { display:none; }
+  #app section.on { display:block; }
+  #app .card { background:var(--card); border-radius:10px; padding:12px; margin-bottom:12px; border:1px solid var(--line); }
+  #app h2 { font-size:14px; margin:0 0 10px; font-weight:700; }
+  #app h2 .n { color:var(--mute); font-weight:400; margin-left:6px; font-size:12px; }
+  #app .sub { font-size:12px; color:var(--mute); margin:-4px 0 10px; }
+
+  #app .item { display:flex; align-items:center; gap:8px; padding:9px 10px;
+    border-left:4px solid var(--line); background:#fbfcfc; border-radius:0 8px 8px 0; margin-bottom:6px; }
+  #app .item.d0 { border-left-color:var(--urgent); background:var(--urgent-soft); }
+  #app .item.d1 { border-left-color:var(--warn); background:var(--warn-soft); }
+  #app .item-main { flex:1; min-width:0; }
+  #app .item-name { font-size:14px; font-weight:600; }
+  #app .item-meta { font-size:11px; color:var(--ink2); }
+  #app .item .days { font-size:11px; font-weight:700; white-space:nowrap; }
+  #app .d0 .days { color:var(--urgent); } #app .d1 .days { color:var(--warn); }
+  #app .item .mini { border:1px solid var(--line); background:#fff; color:var(--ink2);
+    font-size:11px; padding:4px 7px; border-radius:6px; font-family:var(--font); cursor:pointer; }
+
+  #app input[type=text],#app input[type=number],#app input[type=date],#app select,#app textarea {
+    font-family:var(--font); font-size:15px; padding:9px 10px; border:1px solid var(--line);
+    border-radius:8px; background:#fff; color:var(--ink); width:100%; }
+  #app .row { display:flex; gap:6px; margin-bottom:8px; }
+  #app .row > * { min-width:0; }
+  #app .chips { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:9px; }
+  #app .chip { font-size:12px; padding:5px 9px; border-radius:14px; border:1px solid var(--line);
+    background:#fff; color:var(--ink2); cursor:pointer; }
+  #app .chip.sel { background:var(--primary); border-color:var(--primary); color:#fff; }
+  #app button.go { width:100%; padding:11px; border:none; border-radius:8px; background:var(--primary);
+    color:#fff; font-size:15px; font-weight:700; font-family:var(--font); cursor:pointer; }
+  #app button.ghost { padding:8px 12px; border:1px solid var(--primary); border-radius:8px; background:#fff;
+    color:var(--primary); font-size:13px; font-weight:600; font-family:var(--font); cursor:pointer; }
+
+  #app .rec { border:1px solid var(--line); border-radius:10px; margin-bottom:9px; background:#fff; overflow:hidden; }
+  #app .rec.pin { border-color:var(--primary); }
+  #app .rec-hd { padding:11px 12px; cursor:pointer; }
+  #app .rec-line { display:flex; align-items:baseline; gap:8px; }
+  #app .rec-name { font-size:15px; font-weight:700; flex:1; }
+  #app .rec-pct { font-size:12px; font-weight:700; color:var(--primary); white-space:nowrap; }
+  #app .rec-btn { display:inline-block; margin-top:6px; background:var(--soft); color:#14503f;
+    font-size:12px; font-weight:600; padding:4px 8px; border-radius:6px; }
+  #app .rec-src { font-size:11px; color:var(--mute); margin-top:5px; }
+  #app .rec-rescue { font-size:11px; color:var(--urgent); font-weight:600; margin-top:5px; }
+  #app .rec-lack { font-size:11px; color:var(--ink2); margin-top:4px; }
+  #app .rec-body { padding:0 12px 12px; border-top:1px solid var(--line); }
+  #app .rec-body h4 { font-size:12px; margin:12px 0 5px; color:var(--mute); font-weight:700; }
+  #app .ing { display:flex; justify-content:space-between; gap:8px; font-size:13px; padding:3px 0; border-bottom:1px dotted var(--line); }
+  #app .ing.no { color:var(--urgent); }
+  #app ol.steps { margin:4px 0 0; padding-left:18px; font-size:13px; }
+  #app ol.steps li { margin-bottom:4px; }
+  #app .tip { font-size:12px; background:var(--warn-soft); padding:8px 10px; border-radius:6px; margin-top:10px; color:#6b511a; }
+  #app .rec-acts { display:flex; gap:6px; margin-top:12px; }
+  #app .rec-acts button { flex:1; }
+
+  #app .shop-g { margin-bottom:12px; }
+  #app .shop-g h3 { font-size:12px; color:var(--mute); margin:0 0 6px; font-weight:700; }
+  #app .shop-i { display:flex; align-items:center; gap:9px; padding:8px 4px; border-bottom:1px solid var(--line); font-size:14px; }
+  #app .shop-i input { width:20px; height:20px; flex:none; accent-color:var(--primary); }
+  #app .shop-i .q { color:var(--ink2); font-size:12px; margin-left:auto; white-space:nowrap; }
+  #app .shop-i.done { color:var(--mute); text-decoration:line-through; }
+  #app .plan-i { display:flex; align-items:center; gap:8px; font-size:14px; padding:7px 0; border-bottom:1px solid var(--line); }
+  #app .plan-i button { border:none; background:none; color:var(--mute); font-size:17px; cursor:pointer; }
+  #app .empty { font-size:13px; color:var(--mute); padding:14px 4px; text-align:center; }
+  #app .money { display:flex; gap:8px; align-items:center; font-size:13px; }
+  #app .money input { flex:1; }
+  #app .loss { font-size:13px; padding:8px 10px; background:var(--urgent-soft); border-radius:8px; color:#7a2c12; }
+
+  #app nav { position:fixed; bottom:0; left:0; right:0; max-width:460px; margin:0 auto;
+    display:flex; background:#fff; border-top:1px solid var(--line); }
+  #app nav button { flex:1; padding:11px 4px 14px; border:none; background:none;
+    font-family:var(--font); font-size:12px; color:var(--mute); cursor:pointer; }
+  #app nav button.on { color:var(--primary); font-weight:700; box-shadow:inset 0 2px 0 var(--primary); }
+  #app nav .badge { display:inline-block; background:var(--urgent); color:#fff; font-size:10px;
+    border-radius:8px; padding:0 5px; margin-left:3px; }
+  #app .toast { position:fixed; bottom:88px; left:50%; transform:translateX(-50%); background:var(--ink);
+    color:#fff; font-size:13px; padding:9px 15px; border-radius:20px; z-index:20; max-width:90%; }
+</style>
+
+<script>
+(function () {
+  const KEY = 'kitchen-v2', DAY = 86400000;
+  let S = { inv:[], plan:[], custom:[], serv:6, chk:{}, spend:[], loss:[], memo:{} };
+  let tab='fridge', openRec=null, filter='all', showAll=false;
+
+  /* ================= 食材の名寄せ ================= */
+  const CANON = {
+    '豚肉':['豚','豚こま','豚バラ','豚ロース','豚もも','豚肩'],
+    '鶏肉':['鶏','とり肉','鶏もも','鶏むね','鶏胸','ささみ','手羽'],
+    '牛肉':['牛','牛こま','牛バラ','牛角切り'],
+    'ひき肉':['挽き肉','挽肉','合いびき','合びき','豚ひき','鶏ひき','牛ひき'],
+    '玉ねぎ':['たまねぎ','タマネギ','玉葱'], 'にんじん':['人参','ニンジン'],
+    'じゃがいも':['ジャガイモ','じゃが芋','馬鈴薯','メークイン'],
+    '大根':['だいこん','ダイコン'], '白菜':['はくさい'], 'キャベツ':['きゃべつ'],
+    'もやし':['モヤシ'], 'トマト':['ミニトマト','カットトマト','トマト缶','トマト水煮'],
+    '豆腐':['とうふ','木綿豆腐','絹豆腐','絹ごし'], '厚揚げ':['あつあげ','生揚げ'],
+    '卵':['たまご','タマゴ','鶏卵'],
+    'きのこ':['しめじ','えのき','しいたけ','椎茸','まいたけ','舞茸','エリンギ','マッシュルーム'],
+    'ねぎ':['長ねぎ','長ネギ','青ねぎ','小ねぎ','白ねぎ'], 'ピーマン':['パプリカ'],
+    'なす':['ナス','茄子'], 'ブロッコリー':[], 'ほうれん草':['ほうれんそう','小松菜'],
+    'さば':['鯖','サバ'], '鮭':['さけ','サケ','サーモン'], 'ぶり':['ブリ','鰤'],
+    'ごぼう':['ゴボウ','牛蒡'], 'れんこん':['レンコン','蓮根'], '里いも':['里芋','サトイモ'],
+    'こんにゃく':['しらたき','糸こんにゃく'], '油揚げ':['あぶらあげ'],
+    'ウインナー':['ソーセージ','ウィンナー'], 'ベーコン':[], 'セロリ':[],
+    'かぼちゃ':['カボチャ','南瓜'], 'かぶ':['カブ','蕪'], 'わかめ':['ワカメ'], '米':['ごはん','お米']
+  };
+  const AISLE = {
+    '青果':['玉ねぎ','にんじん','じゃがいも','大根','白菜','キャベツ','もやし','トマト','きのこ','ねぎ','ピーマン','なす','ブロッコリー','ほうれん草','ごぼう','れんこん','セロリ','かぼちゃ','里いも','かぶ'],
+    '肉・魚':['豚肉','鶏肉','牛肉','ひき肉','さば','鮭','ぶり','ウインナー','ベーコン'],
+    '豆腐・卵・練り物':['豆腐','厚揚げ','卵','油揚げ','こんにゃく'],
+    'その他':['わかめ','米']
+  };
+  const SHELF = { '青果':6, '肉・魚':3, '豆腐・卵・練り物':8, 'その他':14 };
+  function canon(raw){ const s=String(raw||'').replace(/\s|　/g,'');
+    for(const k in CANON){ if(s.includes(k)) return k; for(const x of CANON[k]) if(s.includes(x)) return k; } return s; }
+  function aisle(n){ const c=canon(n); for(const a in AISLE) if(AISLE[a].indexOf(c)>=0) return a; return 'その他'; }
+
+  /* ================= メニュー集どおりの定番（KN-HW24G） ================= */
+  const BOOK = [
+    { id:'k1', name:'肉じゃが', no:'1', nav:'メニューを選ぶ → カテゴリーで探す → 煮物 → 肉 → 肉じゃが',
+      icons:'まぜ技あり／無水', min:'約35分', src:'メニュー集 p.6', cap:'2〜6人分',
+      main:[{n:'じゃがいも',q:450,q6:675,u:'g',c:'4〜6つ切り'},{n:'玉ねぎ',q:400,q6:600,u:'g',c:'くし切り'},{n:'にんじん',q:100,q6:150,u:'g',c:'乱切り'},{n:'牛バラ薄切り肉',q:200,q6:300,u:'g',c:'3〜4cm幅'}],
+      sub4:['しょうゆ 大4','酒 大3','砂糖 大3','みりん 大2'], sub6:['しょうゆ 大6','酒 大4.5','砂糖 大4.5','みりん 大3'],
+      steps:['まぜ技ユニットをセットする。','内鍋に野菜の半量→牛肉の半量をほぐして入れる。','その上に残りの野菜、残りの牛肉、最後に調味料を入れてスタート。'],
+      tip:'水は入れない。牛肉を豚こまに替えても同じボタンで作れる。' },
+
+    { id:'k2', name:'鶏と大根の煮物', no:'', nav:'メニューを選ぶ → カテゴリーで探す → 煮物 → 肉 → 鶏と大根の煮物',
+      icons:'まぜ技あり／無水／予約可', min:'4人分 約35分・6人分 約40分', src:'メニュー集 p.7', cap:'2〜6人分',
+      main:[{n:'鶏もも肉',q:250,q6:375,u:'g',c:'ひと口大'},{n:'大根',q:500,q6:750,u:'g',c:'厚さ3cmのいちょう切り'}],
+      sub4:['しょうゆ 大3','みりん 大3','だしパック 1個'], sub6:['しょうゆ 大4.5','みりん 大4.5','だしパック 1個'],
+      steps:['まぜ技ユニットをセットする。','内鍋にだしパックと調味料を先に入れる。','その上に鶏肉と大根を入れてスタート。'],
+      tip:'調味料が先、具材が後。予約ができるので朝セットして帰宅時に完成させられる。' },
+
+    { id:'k3', name:'豚の角煮', no:'', nav:'メニューを選ぶ → カテゴリーで探す → 煮物 → 肉 → 豚の角煮',
+      icons:'下ゆで＋本調理の2段階', min:'約1時間30分（下ゆで別）', src:'メニュー集 p.8', cap:'2〜6人分',
+      main:[{n:'豚バラかたまり肉',q:800,q6:1200,u:'g',c:'5cm角'}],
+      sub4:['【下ゆで】しょうが・白ねぎの青い部分 各適量／水 1L','【本調理】酒 100mL','砂糖 大5','しょうゆ 大5','にんにく 1かけ','しょうが 1かけ','水 400mL'],
+      steps:['豚肉と下ゆでの材料を内鍋へ。「手動で作る → スープを作る → まぜない → 約30分」。','加熱後、肉を洗ってアクを取り、内鍋を軽く洗う。','油抜きした肉と本調理の調味料を入れ、自動メニューの豚の角煮でスタート。'],
+      tip:'2〜6人分どれでも、豚肉以外の材料は4人分と同量でよい。煮汁は「手動で作る → 煮詰める」で詰められる。' },
+
+    { id:'k4', name:'豚肉のトマト煮こみ', no:'', nav:'メニューを選ぶ → カテゴリーで探す → 煮物 → 肉 → 豚肉のトマト煮こみ',
+      icons:'まぜ技あり', min:'約20分', src:'メニュー集 p.9', cap:'4〜6人分',
+      main:[{n:'玉ねぎ',q:200,q6:300,u:'g',c:'薄切り'},{n:'豚ロース肉',q:400,q6:600,u:'g',c:'2〜3cm幅'},{n:'トマト水煮',q:1,q6:1.5,u:'缶',c:'実は粗く刻む'}],
+      sub4:['ケチャップ 大1','コンソメ 小2','にんにく 1かけ','オリーブオイル 大2','塩・こしょう 各少々'],
+      steps:['まぜ技ユニットをセットする。','材料表の順に全部入れてスタート。'],
+      tip:'豚肉を鶏肉や牛肉に替えても同じボタンで作れる。余ったソースはパスタやパンに使える。' },
+
+    { id:'k5', name:'ビーフカレー', no:'63', nav:'メニューを選ぶ → カテゴリーで探す → カレー・シチュー → ビーフカレー',
+      icons:'まぜ技あり／予約可', min:'約45分', src:'メニュー集 p.25', cap:'2〜6人分',
+      main:[{n:'牛角切り肉',q:250,q6:375,u:'g'},{n:'玉ねぎ',q:400,q6:600,u:'g',c:'くし切り'},{n:'にんじん',q:100,q6:150,u:'g',c:'乱切り'},{n:'じゃがいも',q:300,q6:450,u:'g',c:'4〜6つ切り'}],
+      sub4:['カレールウ 4〜5皿分','水：ルウ表示より約250mL減らす'], sub6:['カレールウ 6〜8皿分','水：ルウ表示より約250mL減らす'],
+      steps:['まぜ技ユニットをセットする。','内鍋に牛肉→野菜→水の順に入れる。','割ったルウを一番上にのせてスタート。'],
+      tip:'水はルウの箱の表示より約250mL少なく。予約調理のときはさらに約150mL減らす。' }
+  ];
+
+  /* ================= 応用のスロット ================= */
+  const P = {
+    butakoma:{n:'豚こま切れ肉',s:'豚こま',q:250,u:'g',t:'firm'},
+    butabara:{n:'豚バラ薄切り肉',s:'豚バラ',q:250,u:'g',t:'firm'},
+    torimomo:{n:'鶏もも肉',s:'鶏もも',q:300,u:'g',t:'firm'},
+    torimune:{n:'鶏むね肉',s:'鶏むね',q:300,u:'g',t:'firm'},
+    tebamoto:{n:'鶏手羽元',s:'手羽元',q:8,u:'本',t:'firm'},
+    gyukoma:{n:'牛こま切れ肉',s:'牛こま',q:200,u:'g',t:'firm'},
+    hikiniku:{n:'合いびき肉',s:'ひき肉',q:250,u:'g',t:'ground'},
+    atsuage:{n:'厚揚げ',s:'厚揚げ',q:2,u:'枚',t:'firm'},
+    tofu:{n:'豆腐',s:'豆腐',q:2,u:'丁',t:'soft'},
+    saba:{n:'さば',s:'さば',q:4,u:'切れ',t:'soft'},
+    buri:{n:'ぶり',s:'ぶり',q:4,u:'切れ',t:'soft'},
+    sake:{n:'鮭',s:'鮭',q:4,u:'切れ',t:'soft'},
+    wiener:{n:'ウインナー',s:'ウインナー',q:8,u:'本',t:'firm'},
+    bacon:{n:'ベーコン',s:'ベーコン',q:80,u:'g',t:'firm'}
+  };
+  const V = {
+    jaga:{n:'じゃがいも',s:'じゃがいも',q:450,u:'g',c:'4〜6つ切り',t:'root'},
+    daikon:{n:'大根',s:'大根',q:500,u:'g',c:'厚さ2〜3cmのいちょう切り',t:'root'},
+    kabocha:{n:'かぼちゃ',s:'かぼちゃ',q:500,u:'g',c:'3〜4cm角',t:'root'},
+    satoimo:{n:'里いも',s:'里いも',q:500,u:'g',c:'皮をむいて半分',t:'root'},
+    renkon:{n:'れんこん',s:'れんこん',q:300,u:'g',c:'乱切り',t:'root'},
+    gobo:{n:'ごぼう',s:'ごぼう',q:200,u:'g',c:'ささがき',t:'root'},
+    ninjin:{n:'にんじん',s:'にんじん',q:200,u:'g',c:'乱切り',t:'root'},
+    kabu:{n:'かぶ',s:'かぶ',q:400,u:'g',c:'くし切り',t:'root'},
+    hakusai:{n:'白菜',s:'白菜',q:500,u:'g',c:'ざく切り',t:'leaf'},
+    kyabetsu:{n:'キャベツ',s:'キャベツ',q:400,u:'g',c:'ざく切り',t:'leaf'},
+    moyashi:{n:'もやし',s:'もやし',q:3,u:'袋',c:'洗う',t:'leaf'},
+    nasu:{n:'なす',s:'なす',q:400,u:'g',c:'厚さ2cmの半月切り',t:'soft'},
+    kinoko:{n:'きのこ',s:'きのこ',q:200,u:'g',c:'小房に分ける',t:'soft'},
+    tamanegi:{n:'玉ねぎ',s:'玉ねぎ',q:400,u:'g',c:'くし切り',t:'root'}
+  };
+  const SZ = {
+    amakara:{s:'の甘辛煮',i4:['しょうゆ 大4','酒 大3','砂糖 大3','みりん 大2'],i6:['しょうゆ 大6','酒 大4.5','砂糖 大4.5','みりん 大3']},
+    dashi:{s:'の煮物',i4:['しょうゆ 大3','みりん 大3','だしパック 1個'],i6:['しょうゆ 大4.5','みりん 大4.5','だしパック 1個']},
+    miso:{s:'のみそ煮',i4:['みそ 大3','酒 大3','砂糖 大2','しょうが 1かけ'],i6:['みそ 大4.5','酒 大4.5','砂糖 大3','しょうが 1かけ']},
+    tomato:{s:'のトマト煮',i4:['トマト水煮 1缶','ケチャップ 大1','コンソメ 小2','にんにく 1かけ','オリーブオイル 大2'],i6:['トマト水煮 1.5缶','ケチャップ 大1.5','コンソメ 大1','にんにく 1かけ','オリーブオイル 大3']},
+    chuka:{s:'の中華煮',i4:['鶏がらスープの素 大1','しょうゆ 大2','酒 大2','ごま油 小1','片栗粉 大1'],i6:['鶏がらスープの素 大1.5','しょうゆ 大3','酒 大3','ごま油 小1.5','片栗粉 大1.5']},
+    shio:{s:'の重ね蒸し',i4:['酒 大2','塩 小1','ポン酢（食べるとき）'],i6:['酒 大3','塩 小1.5','ポン酢（食べるとき）']},
+    cream:{s:'のクリーム煮',i4:['牛乳 200mL','薄力粉 大1','バター 10g','コンソメ 小2'],i6:['牛乳 300mL','薄力粉 大1.5','バター 15g','コンソメ 大1']},
+    curry:{s:'カレー',i4:['カレールウ 4〜5皿分','水：ルウ表示より約250mL減らす'],i6:['カレールウ 6〜8皿分','水：ルウ表示より約250mL減らす']},
+    soup:{s:'のスープ',i4:['コンソメ 大1','水 500mL','塩・こしょう 各少々'],i6:['コンソメ 大1.5','水 700mL','塩・こしょう 各少々']},
+    misoshiru:{s:'のみそ汁',i4:['だし汁 600mL','みそ 40g'],i6:['だし汁 800mL','みそ 60g']}
+  };
+
+  /* ================= ベース＝押すボタン ================= */
+  const BASES = [
+    { id:'b1', label:'肉じゃが（No.1）', short:'肉じゃが', nav:'煮物 → 肉 → 肉じゃが',
+      icons:'まぜ技あり／無水', min:'約35分',
+      why:'薄切り肉と根菜を無水で35分まぜながら煮るボタン。同じ構成の煮物はここに載せられます。',
+      order:'内鍋に野菜の半量→肉の半量→残りの野菜→残りの肉→調味料。水は入れない。',
+      P:['butakoma','butabara','torimomo','gyukoma','atsuage'],
+      V:['jaga','daikon','kabocha','satoimo','renkon','kabu','ninjin'],
+      Z:['amakara','dashi','miso','chuka'], sub:['tamanegi'] },
+
+    { id:'b2', label:'鶏と大根の煮物', short:'鶏と大根', nav:'煮物 → 肉 → 鶏と大根の煮物',
+      icons:'まぜ技あり／無水／予約可', min:'約35〜40分',
+      why:'大ぶりの根菜にだしを含ませるボタン。予約ができるので朝セット向き。',
+      order:'内鍋にだしパックと調味料を先に入れ、その上に肉と野菜。',
+      P:['torimomo','tebamoto','butabara','butakoma','atsuage'],
+      V:['daikon','kabu','satoimo','kabocha','renkon'],
+      Z:['dashi','amakara','miso'], sub:[] },
+
+    { id:'b3', label:'豚肉のトマト煮こみ', short:'トマト煮', nav:'煮物 → 肉 → 豚肉のトマト煮こみ',
+      icons:'まぜ技あり', min:'約20分',
+      why:'トマト缶や牛乳で20分煮る洋風のボタン。肉も野菜も入れ替えが効きます。',
+      order:'まぜ技をセットし、材料表の順に全部入れるだけ。',
+      P:['butakoma','torimomo','torimune','hikiniku','wiener','bacon'],
+      V:['tamanegi','kyabetsu','nasu','kinoko','ninjin'],
+      Z:['tomato','cream'], sub:[] },
+
+    { id:'b4', label:'白菜と豚バラの重ね煮', short:'重ね煮', nav:'煮物 → 野菜 → 白菜と豚バラの重ね煮',
+      icons:'まぜ技なし／無水', min:'約25分',
+      why:'まぜないので崩れやすい食材が使えるボタン。葉物と薄切り肉を重ねるだけ。',
+      order:'野菜と肉を交互に重ねて詰め、調味料をふる。水は入れない。',
+      P:['butabara','butakoma','torimomo','tofu'],
+      V:['hakusai','kyabetsu','moyashi','nasu'],
+      Z:['shio','chuka','miso'], sub:[] },
+
+    { id:'b5', label:'ビーフカレー（No.63）', short:'カレー', nav:'カレー・シチュー → ビーフカレー',
+      icons:'まぜ技あり／予約可', min:'約45分',
+      why:'ルウを使う煮こみのボタン。肉とルウを替えればカレーもシチューも同じ設定です。',
+      order:'肉→野菜→水の順に入れ、割ったルウを一番上にのせる。水はルウ表示より約250mL減らす。',
+      P:['gyukoma','butakoma','torimomo','wiener'],
+      V:['jaga','ninjin','kabocha','nasu','kinoko'],
+      Z:['curry','cream'], sub:['tamanegi'] },
+
+    { id:'b6', label:'具だくさんみそ汁', short:'汁物', nav:'スープ → 具だくさんみそ汁',
+      icons:'まぜ技あり／予約可', min:'約25分',
+      why:'具400gと汁を入れるだけのボタン。半端に残った野菜の受け皿になります。',
+      order:'根菜は薄切り、その他は好みの大きさ。全部入れてスタート。みそは加熱後に溶く。',
+      P:['butakoma','torimomo','atsuage','bacon'],
+      V:['daikon','hakusai','kyabetsu','ninjin','satoimo','kinoko'],
+      Z:['misoshiru','soup'], sub:[] },
+
+    { id:'b7', label:'さばのみそ煮', short:'魚の煮つけ', nav:'煮物 → 魚介 → さばのみそ煮',
+      icons:'まぜ技なし', min:'約25〜30分',
+      why:'魚を動かさずに煮るボタン。切り身なら種類を替えても同じ設定で作れます。',
+      order:'魚を重ならないように並べ、混ぜた調味料をまわしかける。まぜ技は必ず外す。',
+      P:['saba','buri','sake'], V:['daikon','gobo','kinoko'],
+      Z:['miso','amakara'], sub:[] },
+
+    { id:'b8', label:'きんぴら（炒め物）', short:'炒め物', nav:'煮物 → 野菜 → きんぴら',
+      icons:'まぜ技あり／無水', min:'約10〜15分',
+      why:'細切りにして短時間で仕上げるボタン。作りおきの副菜が量産できます。',
+      order:'すべて細切りにして、食材→調味料の順に入れる。',
+      P:['butakoma','hikiniku','atsuage'], V:['gobo','renkon','ninjin','kinoko'],
+      Z:['amakara','chuka'], sub:[] }
+  ];
+
+  /* ================= 応用レシピの生成 ================= */
+  function label(pk,vk,zk){ return zk==='curry' ? P[pk].s+'カレー' : P[pk].s+'と'+V[vk].s+SZ[zk].s; }
+  function build(b,pk,vk,zk){
+    const p=P[pk], v=V[vk], z=SZ[zk];
+    const main=[{n:p.n,q:p.q,u:p.u},{n:v.n,q:v.q,u:v.u,c:v.c}];
+    b.sub.forEach(k=>main.push({n:V[k].n,q:V[k].q,u:V[k].u,c:V[k].c}));
+    return { id:'g:'+b.id+':'+pk+':'+vk+':'+zk, gen:true, base:b.id, name:label(pk,vk,zk),
+      nav:'メニューを選ぶ → カテゴリーで探す → '+b.nav, icons:b.icons, min:b.min,
+      main, sub4:z.i4, sub6:z.i6, steps:[b.order], why:b.why, baseLabel:b.label };
+  }
+  const GEN=[];
+  BASES.forEach(b=>b.P.forEach(pk=>b.V.forEach(vk=>b.Z.forEach(zk=>{
+    if(b.icons.indexOf('まぜ技あり')>=0 && b.id!=='b3' && b.id!=='b6' &&
+       (P[pk].t==='soft'||V[vk].t==='soft')) return;   /* 崩れる食材はまぜ技ありに載せない */
+    GEN.push(build(b,pk,vk,zk));
+  }))));
+  const bookNames=BOOK.map(r=>r.name);
+  const GENF=GEN.filter(r=>bookNames.indexOf(r.name)<0);
+
+  /* ================= 保存先の切り替え ================= */
+  try{
+    const hd=document.head;
+    if(!document.querySelector('meta[name=viewport]')){ const mv=document.createElement('meta');
+      mv.name='viewport'; mv.content='width=device-width, initial-scale=1, viewport-fit=cover'; hd.appendChild(mv); }
+    if(!document.querySelector('meta[name=theme-color]')){ const tc=document.createElement('meta');
+      tc.name='theme-color'; tc.content='#1b6b57'; hd.appendChild(tc); }
+    if(!document.querySelector('link[rel="icon"]')){
+      const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'+
+        '<rect width="64" height="64" rx="14" fill="#1b6b57"/>'+
+        '<rect x="18" y="13" width="28" height="38" rx="4" fill="#eaf5f0"/>'+
+        '<rect x="18" y="30" width="28" height="3" fill="#1b6b57"/>'+
+        '<rect x="39" y="19" width="3" height="8" rx="1.5" fill="#1b6b57"/>'+
+        '<rect x="39" y="37" width="3" height="8" rx="1.5" fill="#1b6b57"/></svg>';
+      const ic=document.createElement('link'); ic.rel='icon'; ic.type='image/svg+xml';
+      ic.href='data:image/svg+xml,'+encodeURIComponent(svg); hd.appendChild(ic);
+    }
+    if(!document.title) document.title='うちの冷蔵庫とホットクック';
+  }catch(e){}
+
+  const HAS_CLOUD = !!(window.storage && typeof window.storage.get === 'function');
+  const HAS_LOCAL = (function(){ try{ window.localStorage.setItem('__t','1'); window.localStorage.removeItem('__t'); return true; }catch(e){ return false; } })();
+  const WHERE = HAS_CLOUD ? 'Claudeアプリ内' : HAS_LOCAL ? 'この端末のブラウザ' : '保存できません（閉じると消えます）';
+  async function readRaw(){
+    if(HAS_CLOUD){ try{ const r=await window.storage.get(KEY,false); return (r&&r.value)?r.value:null; }catch(e){ return null; } }
+    if(HAS_LOCAL){ try{ return window.localStorage.getItem(KEY); }catch(e){ return null; } }
+    return null;
+  }
+  async function writeRaw(v){
+    if(HAS_CLOUD){ await window.storage.set(KEY,v,false); return; }
+    if(HAS_LOCAL){ window.localStorage.setItem(KEY,v); return; }
+    throw new Error('no storage');
+  }
+  async function load(){ const v=await readRaw(); if(v){ try{ S=Object.assign(S,JSON.parse(v)); }catch(e){} } }
+  let st; function save(){ clearTimeout(st); st=setTimeout(async()=>{ try{ await writeRaw(JSON.stringify(S)); }catch(e){ toast('保存できませんでした'); } },350); }
+  function toast(m){ const d=document.createElement('div'); d.className='toast'; d.textContent=m;
+    document.getElementById('app').appendChild(d); setTimeout(()=>d.remove(),1900); }
+  const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  /* ================= 期限 ================= */
+  const today=()=>{ const d=new Date(); d.setHours(0,0,0,0); return d; };
+  function dl(i){ return i.exp ? Math.round((new Date(i.exp+'T00:00:00')-today())/DAY) : null; }
+  function dcls(d){ return d===null?'':d<=1?'d0':d<=3?'d1':''; }
+  function dtxt(d){ return d===null?'':d<0?'期限切れ':d===0?'今日まで':'あと'+d+'日'; }
+  const expiring=()=>S.inv.filter(i=>{ const d=dl(i); return d!==null&&d<=3; });
+
+  /* ================= 照合 ================= */
+  function stock(name){ const c=canon(name); return S.inv.find(i=>canon(i.name)===c)||null; }
+  const six=()=>S.serv===6;
+  function q(m){ return six() ? (m.q6!==undefined ? m.q6 : Math.round(m.q*1.5*100)/100) : m.q; }
+  function fq(n,u){ return (Math.round(n*100)/100)+(u||''); }
+  const all=()=>BOOK.concat(GENF,S.custom);
+  function ev(r){
+    let have=0, lack=[], resc=[];
+    r.main.forEach(m=>{ const s=stock(m.n);
+      if(s){ have++; const d=dl(s); if(d!==null&&d<=3) resc.push(s.name); } else lack.push(m.n); });
+    const pct=Math.round(have/r.main.length*100);
+    return { pct, lack, resc, score: pct + resc.length*25 + (r.gen?0:4) };
+  }
+
+  /* ================= 描画 ================= */
+  function render(){
+    const ex=expiring(), el=document.getElementById('app');
+    el.innerHTML = header(ex)+'<main>'+fridge()+cook()+shop()+'</main>'+navbar(ex.length);
+    bind();
+  }
+  function header(ex){
+    const d=new Date(), w=['日','月','火','水','木','金','土'][d.getDay()];
+    let a;
+    if(ex.length) a='<div class="hd-alert">🍅<div><b>'+ex.length+'品</b>が3日以内に期限を迎えます。<br>'+
+      esc(ex.slice(0,4).map(i=>i.name).join('、'))+(ex.length>4?' ほか':'')+'</div></div>';
+    else if(!S.inv.length) a='<div class="hd-alert">🧊<div>まず冷蔵庫の中身を入れてみましょう。まとめて貼り付けられます。</div></div>';
+    else a='<div class="hd-alert">✅<div>期限が迫っている食材はありません。</div></div>';
+    return '<header><div class="hd-top"><span class="hd-title">うちの冷蔵庫とホットクック</span>'+
+      '<span class="hd-date">KN-HW24G ／ '+(d.getMonth()+1)+'/'+d.getDate()+'('+w+')</span></div>'+a+'</header>';
+  }
+
+  function fridge(){
+    const sorted=S.inv.slice().sort((a,b)=>{ const x=dl(a),y=dl(b); if(x===null)return 1; if(y===null)return -1; return x-y; });
+    const list=sorted.length ? sorted.map(i=>{ const d=dl(i), near=(d!==null&&d<=1);
+      return '<div class="item '+dcls(d)+'"><div class="item-main"><div class="item-name">'+esc(i.name)+'</div>'+
+      '<div class="item-meta">'+esc(fq(i.qty,i.unit))+' ・ '+esc(i.loc)+'</div></div>'+
+      '<div class="days">'+dtxt(d)+'</div>'+
+      (near?'<button class="mini" data-toss="'+i.id+'">捨てた</button>':'')+
+      '<button class="mini" data-del="'+i.id+'">使った</button></div>'; }).join('')
+      : '<div class="empty">まだ何も入っていません。</div>';
+
+    const quick=['にんじん','玉ねぎ','じゃがいも','大根','白菜','キャベツ','もやし','豚こま切れ肉','鶏もも肉','豆腐','卵','きのこ']
+      .map(n=>'<span class="chip" data-quick="'+n+'">'+n+'</span>').join('');
+
+    return '<section id="s-fridge" class="'+(tab==='fridge'?'on':'')+'">'+
+      '<div class="card"><h2>まとめて入れる</h2>'+
+      '<div class="sub">レシートを見ながら1行ずつ。「にんじん 3本」と書けば数量も入ります。期限はおおよそで自動設定されます。</div>'+
+      '<textarea id="b-text" rows="4" placeholder="豚こま切れ肉 400g&#10;にんじん 3本&#10;白菜&#10;豆腐 2丁"></textarea>'+
+      '<div style="height:8px"></div><button class="go" id="b-add">まとめて冷蔵庫に入れる</button></div>'+
+      '<div class="card"><h2>1品ずつ入れる</h2><div class="chips">'+quick+'</div>'+
+      '<div class="row"><input type="text" id="f-name" placeholder="食材名" style="flex:2"><input type="number" id="f-qty" value="1" step="0.5" style="flex:1"><input type="text" id="f-unit" placeholder="個" style="flex:1"></div>'+
+      '<div class="row"><select id="f-loc"><option>冷蔵</option><option>冷凍</option><option>常温</option></select><input type="date" id="f-exp"></div>'+
+      '<div class="chips"><span class="chip" data-exp="2">2日後</span><span class="chip" data-exp="4">4日後</span><span class="chip" data-exp="7">1週間後</span><span class="chip" data-exp="30">1か月後</span><span class="chip" data-exp="">期限なし</span></div>'+
+      '<button class="go" id="f-add">冷蔵庫に入れる</button></div>'+
+      '<div class="card"><h2>いま入っているもの<span class="n">'+S.inv.length+'品</span></h2>'+
+      '<div class="sub">期限が近い順。使い切ったら「使った」、間に合わなければ「捨てた」を押してください。</div>'+list+'</div>'+
+      '</section>';
+  }
+
+  function cook(){
+    const ranked=all().map(r=>({r,e:ev(r)}))
+      .filter(x=> filter==='all' ? true : filter==='book' ? !x.r.gen : x.r.base===filter)
+      .sort((a,b)=>b.e.score-a.e.score);
+    const cut = showAll ? ranked.slice(0,150) : ranked.slice(0,14);
+    const body = !S.inv.length
+      ? '<div class="empty">冷蔵庫に食材を入れると、作れる順に並びます。</div>'
+      : cut.map(x=>card(x.r,x.e)).join('') +
+        (ranked.length>cut.length ? '<button class="ghost" id="more" style="width:100%">残り'+(ranked.length-cut.length)+'件を表示</button>' : '');
+
+    const chips='<div class="chips"><span class="chip '+(filter==='all'?'sel':'')+'" data-f="all">すべて</span>'+
+      '<span class="chip '+(filter==='book'?'sel':'')+'" data-f="book">メニュー集どおり</span>'+
+      BASES.map(b=>'<span class="chip '+(filter===b.id?'sel':'')+'" data-f="'+b.id+'">'+b.short+'</span>').join('')+'</div>';
+
+    return '<section id="s-cook" class="'+(tab==='cook'?'on':'')+'">'+
+      '<div class="card"><h2>何人分で作る</h2>'+
+      '<div class="chips"><span class="chip '+(!six()?'sel':'')+'" data-serv="4">4人分</span><span class="chip '+(six()?'sel':'')+'" data-serv="6">6人分</span></div>'+
+      '<div class="sub" style="margin:0">自動メニューは2〜6人分まで。5人家族なら6人分で作って、余りを翌日の汁物や弁当に回すと無駄が出ません。</div></div>'+
+      '<div class="card"><h2>押すボタンで絞る</h2>'+chips+
+      '<div class="sub" style="margin:0">「メニュー集どおり」以外は、同じボタンで作れる応用です。全'+(GENF.length+BOOK.length)+'品。</div></div>'+
+      body+customForm()+'</section>';
+  }
+
+  function card(r,e){
+    const open=(openRec===r.id), inPlan=(S.plan.indexOf(r.id)>=0);
+    let h='<div class="rec-hd" data-open="'+r.id+'"><div class="rec-line"><span class="rec-name">'+esc(r.name)+'</span>'+
+      '<span class="rec-pct">'+e.pct+'%</span></div>'+
+      '<div class="rec-btn">'+esc((r.no?'No.'+r.no+'　':'')+(r.gen?r.baseLabel:r.name))+' ／ '+esc(r.min)+'</div>'+
+      '<div class="rec-src">'+esc(r.gen?'応用：'+r.baseLabel+'のボタンで作れます':(r.src||'わが家のレシピ'))+'</div>';
+    if(e.resc.length) h+='<div class="rec-rescue">期限が近い '+esc(e.resc.join('・'))+' を使い切れます</div>';
+    if(e.lack.length) h+='<div class="rec-lack">足りない：'+esc(e.lack.join('、'))+'</div>';
+    h+='</div>';
+    if(!open) return '<div class="rec'+(inPlan?' pin':'')+'">'+h+'</div>';
+
+    const ings=r.main.map(m=>{ const s=stock(m.n);
+      return '<div class="ing '+(s?'':'no')+'"><span>'+esc(m.n)+(m.c?'<br><span style="font-size:11px;color:var(--mute)">'+esc(m.c)+'</span>':'')+'</span>'+
+      '<span style="white-space:nowrap">'+esc(fq(q(m),m.u))+' '+(s?'✓':'× 買う')+'</span></div>'; }).join('');
+    const sarr=(six()&&r.sub6)?r.sub6:(r.sub4||[]);
+    const subs=sarr.map(s=>'<div class="ing"><span>'+esc(s)+'</span></div>').join('');
+    const steps=(r.steps||[]).map(s=>'<li>'+esc(s)+'</li>').join('');
+    const memo=S.memo[r.id]||'';
+
+    const b='<div class="rec-body">'+
+      '<h4>材料（'+S.serv+'人分）</h4>'+ings+
+      (subs?'<h4>調味料</h4>'+subs:'')+
+      (steps?'<h4>作り方</h4><ol class="steps">'+steps+'</ol>':'')+
+      '<h4>ホットクックの操作</h4><div style="font-size:13px">'+esc(r.nav)+'<br>'+
+      '<span style="color:var(--mute)">'+esc(r.icons)+' ／ '+esc(r.min)+(r.cap?' ／ '+esc(r.cap):'')+'</span></div>'+
+      '<div class="row" style="margin-top:8px"><input type="text" data-memo="'+r.id+'" value="'+esc(memo)+'" placeholder="本体で確認したメニュー番号をメモ"></div>'+
+      (r.tip?'<div class="tip">'+esc(r.tip)+'</div>':(r.why?'<div class="tip">'+esc(r.why)+'</div>':''))+
+      '<div class="rec-acts"><button class="ghost" data-plan="'+r.id+'">'+(inPlan?'今週の献立から外す':'今週の献立に入れる')+'</button>'+
+      '<button class="ghost" data-made="'+r.id+'">作った（在庫を減らす）</button></div></div>';
+    return '<div class="rec'+(inPlan?' pin':'')+'">'+h+b+'</div>';
+  }
+
+  function customForm(){
+    return '<div class="card"><h2>わが家のレシピを足す</h2>'+
+      '<div class="sub">どのボタンで作るかを選び、材料は「大根 500g」のように1行ずつ。</div>'+
+      '<div class="row"><input type="text" id="x-name" placeholder="料理名"></div>'+
+      '<div class="row"><select id="x-base">'+BASES.map(b=>'<option value="'+b.id+'">'+b.label+'</option>').join('')+'</select></div>'+
+      '<div class="row"><textarea id="x-ing" rows="3" placeholder="鶏もも肉 400g&#10;大根 500g"></textarea></div>'+
+      '<button class="go" id="x-add">保存する</button></div>';
+  }
+
+  function need(){
+    const acc={};
+    S.plan.forEach(id=>{ const r=all().find(x=>x.id===id); if(!r) return;
+      r.main.forEach(m=>{ const c=canon(m.n); if(!acc[c]) acc[c]={name:m.n,q:0,u:m.u}; acc[c].q+=q(m); }); });
+    const out=[];
+    for(const c in acc){ const n=acc[c], s=stock(n.name); let short=n.q, note='', vague=false;
+      if(s){ if(s.unit===n.u){ short=n.q-s.qty; note='在庫 '+fq(s.qty,s.unit); }
+             else { short=0; vague=true; note='在庫 '+fq(s.qty,s.unit)+'（量は要確認）'; } }
+      if(short>0.001||vague) out.push({key:c,name:n.name,q:Math.round(short*100)/100,u:n.u,note,aisle:aisle(n.name),vague}); }
+    return out;
+  }
+
+  function shop(){
+    const items=need();
+    const plan=S.plan.length ? S.plan.map(id=>{ const r=all().find(x=>x.id===id);
+      return r?'<div class="plan-i"><span style="flex:1">'+esc(r.name)+'</span><span style="font-size:11px;color:var(--mute)">'+esc(r.min)+'</span><button data-unplan="'+id+'">×</button></div>':''; }).join('')
+      : '<div class="empty">献立タブで「今週の献立に入れる」を押すと並びます。</div>';
+
+    let list;
+    if(!S.plan.length) list='<div class="empty">献立が決まると買い物リストができます。</div>';
+    else if(!items.length) list='<div class="empty">追加で買うものはありません。</div>';
+    else { const g={}; items.forEach(i=>{ (g[i.aisle]=g[i.aisle]||[]).push(i); });
+      list=Object.keys(g).map(a=>'<div class="shop-g"><h3>'+esc(a)+'</h3>'+g[a].map(i=>
+        '<label class="shop-i '+(S.chk[i.key]?'done':'')+'"><input type="checkbox" data-chk="'+i.key+'"'+(S.chk[i.key]?' checked':'')+'>'+
+        '<span>'+esc(i.name)+(i.note?'<br><span style="font-size:11px;color:var(--mute)">'+esc(i.note)+'</span>':'')+'</span>'+
+        '<span class="q">'+(i.vague?'量を確認':esc(fq(i.q,i.u)))+'</span></label>').join('')+'</div>').join('')+
+        '<button class="go" id="p-stock" style="margin-top:6px">チェックした分を冷蔵庫に入れる</button>'; }
+
+    const ms=new Date(); ms.setDate(1); ms.setHours(0,0,0,0);
+    const ml=(S.loss||[]).filter(x=>new Date(x.d+'T00:00:00')>=ms);
+    const last4=(S.spend||[]).slice(-4), tot=last4.reduce((a,b)=>a+b.v,0);
+
+    return '<section id="s-shop" class="'+(tab==='shop'?'on':'')+'">'+
+      '<div class="card"><h2>今週の献立<span class="n">'+S.plan.length+'品</span></h2>'+plan+'</div>'+
+      '<div class="card"><h2>買い足すものだけ</h2><div class="sub">必要量から在庫を引いています。</div>'+list+'</div>'+
+      '<div class="card"><h2>今月の結果</h2>'+
+      (ml.length?'<div class="loss">捨てた食材：'+ml.length+'品（'+esc(ml.slice(-4).map(x=>x.n).join('、'))+(ml.length>4?' ほか':'')+'）</div>'
+                :'<div class="sub" style="margin:0">今月まだ捨てた食材はありません。</div>')+
+      '<div style="height:10px"></div>'+
+      '<div class="money"><input type="number" id="m-val" placeholder="今日の買い物額（円）"><button class="ghost" id="m-add">記録</button></div>'+
+      (last4.length?'<div style="font-size:12px;color:var(--ink2);margin-top:8px">直近'+last4.length+'回：'+last4.map(x=>x.v.toLocaleString()+'円').join(' / ')+'　合計 '+tot.toLocaleString()+'円</div>':'')+
+      '</div>'+
+      '<div class="card"><h2>データの引っ越し</h2>'+
+      '<div class="sub">保存先：'+esc(WHERE)+'。別の開きかたに移すときは、書き出したテキストを貼り付けてください。</div>'+
+      '<textarea id="io" rows="3" placeholder="ここに貼り付けて「読み込む」"></textarea>'+
+      '<div style="height:8px"></div>'+
+      '<div class="row" style="margin:0"><button class="ghost" id="io-out" style="flex:1">書き出す</button>'+
+      '<button class="ghost" id="io-in" style="flex:1">読み込む</button></div></div>'+
+      '</section>';
+  }
+
+  function navbar(n){
+    const b=(k,l,g)=>'<button class="'+(tab===k?'on':'')+'" data-tab="'+k+'">'+l+(g?'<span class="badge">'+g+'</span>':'')+'</button>';
+    return '<nav>'+b('fridge','冷蔵庫',n)+b('cook','献立')+b('shop','買い物'+(S.plan.length?'（'+S.plan.length+'）':''))+'</nav>';
+  }
+
+  /* ================= 操作 ================= */
+  function addItem(name,qty,unit,loc,exp){
+    S.inv.push({ id:'i'+Date.now()+Math.random().toString(36).slice(2,5), name, qty, unit, loc, exp });
+  }
+  function defExp(name){ const d=new Date(); d.setDate(d.getDate()+(SHELF[aisle(name)]||7)); return d.toISOString().slice(0,10); }
+
+  function bind(){
+    const a=document.getElementById('app');
+    a.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{ tab=b.dataset.tab; render(); window.scrollTo(0,0); });
+    a.querySelectorAll('[data-quick]').forEach(c=>c.onclick=()=>{ a.querySelector('#f-name').value=c.dataset.quick; });
+    a.querySelectorAll('[data-f]').forEach(c=>c.onclick=()=>{ filter=c.dataset.f; showAll=false; openRec=null; render(); });
+    a.querySelectorAll('[data-serv]').forEach(c=>c.onclick=()=>{ S.serv=Number(c.dataset.serv); save(); render(); });
+    const more=a.querySelector('#more'); if(more) more.onclick=()=>{ showAll=true; render(); };
+
+    a.querySelectorAll('[data-exp]').forEach(c=>c.onclick=()=>{ const v=c.dataset.exp, f=a.querySelector('#f-exp');
+      if(v===''){ f.value=''; return; }
+      const d=new Date(); d.setDate(d.getDate()+Number(v)); f.value=d.toISOString().slice(0,10);
+      a.querySelectorAll('[data-exp]').forEach(o=>o.classList.remove('sel')); c.classList.add('sel'); });
+
+    const ba=a.querySelector('#b-add');
+    if(ba) ba.onclick=()=>{ const raw=a.querySelector('#b-text').value.trim();
+      if(!raw){ toast('入れるものを書いてください'); return; }
+      let c=0;
+      raw.split('\n').map(l=>l.trim()).filter(Boolean).forEach(l=>{
+        const m=l.match(/^(.+?)[\s　]+([0-9.]+)(.*)$/);
+        const name=m?m[1]:l, qty=m?Number(m[2]):1, unit=m?((m[3]||'').trim()||'個'):'個';
+        addItem(name,qty,unit,'冷蔵',defExp(name)); c++; });
+      save(); render(); toast(c+'品を入れました'); };
+
+    const fa=a.querySelector('#f-add');
+    if(fa) fa.onclick=()=>{ const n=a.querySelector('#f-name').value.trim();
+      if(!n){ toast('食材名を入れてください'); return; }
+      addItem(n, Number(a.querySelector('#f-qty').value)||1, a.querySelector('#f-unit').value.trim()||'個',
+        a.querySelector('#f-loc').value, a.querySelector('#f-exp').value||null);
+      save(); render(); toast(n+' を入れました'); };
+
+    a.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ S.inv=S.inv.filter(i=>i.id!==b.dataset.del); save(); render(); });
+    a.querySelectorAll('[data-toss]').forEach(b=>b.onclick=()=>{
+      const it=S.inv.find(i=>i.id===b.dataset.toss); if(!it) return;
+      S.loss=(S.loss||[]).concat([{d:new Date().toISOString().slice(0,10),n:it.name}]);
+      S.inv=S.inv.filter(i=>i.id!==it.id); save(); render(); toast('記録しました'); });
+
+    a.querySelectorAll('[data-open]').forEach(h=>h.onclick=()=>{ openRec=(openRec===h.dataset.open?null:h.dataset.open); render(); });
+    a.querySelectorAll('[data-plan]').forEach(b=>b.onclick=()=>{ const id=b.dataset.plan, i=S.plan.indexOf(id);
+      if(i>=0) S.plan.splice(i,1); else S.plan.push(id); save(); render(); });
+    a.querySelectorAll('[data-unplan]').forEach(b=>b.onclick=()=>{ S.plan=S.plan.filter(x=>x!==b.dataset.unplan); save(); render(); });
+
+    a.querySelectorAll('[data-made]').forEach(b=>b.onclick=()=>{ const r=all().find(x=>x.id===b.dataset.made); if(!r) return;
+      const used=[];
+      r.main.forEach(m=>{ const s=stock(m.n); if(!s) return; used.push(s.name);
+        if(s.unit===m.u){ s.qty=Math.round((s.qty-q(m))*100)/100; if(s.qty<=0.001) S.inv=S.inv.filter(x=>x.id!==s.id); }
+        else S.inv=S.inv.filter(x=>x.id!==s.id); });
+      S.plan=S.plan.filter(x=>x!==r.id); save(); render();
+      toast(used.length?used.join('・')+' を減らしました':'在庫に該当なし'); });
+
+    a.querySelectorAll('[data-memo]').forEach(inp=>inp.onchange=()=>{ S.memo[inp.dataset.memo]=inp.value.trim(); save(); });
+    a.querySelectorAll('[data-chk]').forEach(c=>c.onchange=()=>{ S.chk[c.dataset.chk]=c.checked; save(); render(); });
+
+    const ps=a.querySelector('#p-stock');
+    if(ps) ps.onclick=()=>{ const its=need().filter(i=>S.chk[i.key]);
+      if(!its.length){ toast('チェックがありません'); return; }
+      its.forEach(i=>{ const s=stock(i.name);
+        if(s&&s.unit===i.u){ s.qty+=i.q; s.exp=defExp(i.name); }
+        else addItem(i.name,i.q||1,i.u,'冷蔵',defExp(i.name));
+        delete S.chk[i.key]; });
+      save(); render(); toast(its.length+'品を冷蔵庫に入れました'); };
+
+    const xa=a.querySelector('#x-add');
+    if(xa) xa.onclick=()=>{ const n=a.querySelector('#x-name').value.trim(), raw=a.querySelector('#x-ing').value.trim();
+      if(!n||!raw){ toast('料理名と材料を入れてください'); return; }
+      const bid=a.querySelector('#x-base').value, b=BASES.find(x=>x.id===bid);
+      const main=raw.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{
+        const m=l.match(/^(.+?)[\s　]+([0-9.]+)(.*)$/);
+        return m?{n:m[1],q:Number(m[2]),u:(m[3]||'').trim()}:{n:l,q:1,u:''}; });
+      S.custom.push({ id:'c'+Date.now(), name:n, base:bid, baseLabel:b.label, gen:false,
+        nav:'メニューを選ぶ → カテゴリーで探す → '+b.nav, icons:b.icons, min:b.min,
+        main, sub4:[], steps:[b.order], src:'わが家のレシピ' });
+      save(); render(); toast(n+' を保存しました'); };
+
+    const o1=a.querySelector('#io-out');
+    if(o1) o1.onclick=()=>{ const t=a.querySelector('#io'); t.value=JSON.stringify(S); t.select(); toast('コピーして保管してください'); };
+    const o2=a.querySelector('#io-in');
+    if(o2) o2.onclick=()=>{ const t=a.querySelector('#io').value.trim();
+      if(!t){ toast('貼り付けてください'); return; }
+      try{ S=Object.assign(S,JSON.parse(t)); save(); render(); toast('読み込みました'); }
+      catch(e){ toast('読み込めませんでした'); } };
+
+    const ma=a.querySelector('#m-add');
+    if(ma) ma.onclick=()=>{ const v=Number(a.querySelector('#m-val').value);
+      if(!v){ toast('金額を入れてください'); return; }
+      S.spend=(S.spend||[]).concat([{d:new Date().toISOString().slice(0,10),v}]); save(); render(); toast('記録しました'); };
+  }
+
+  load().then(render);
+})();
+</script>
